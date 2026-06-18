@@ -14,10 +14,10 @@ export default function Home() {
         a saúde mental e o bem-estar de todos.
       </p>
       <div className={styles.ctaContainer}>
-        <Link href="/dashboard/student" className={styles.primaryButton}>
+        <Link href="/login" className={styles.primaryButton}>
           Sou Estudante
         </Link>
-        <Link href="/dashboard/senior" className={styles.secondaryButton}>
+        <Link href="/login" className={styles.secondaryButton}>
           Quero Companhia
         </Link>
       </div>
