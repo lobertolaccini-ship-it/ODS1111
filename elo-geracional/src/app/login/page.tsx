@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabaseClient';
 import styles from './login.module.css';
 
 export default function Login() {
@@ -17,20 +18,55 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    // Futuramente, aqui ficará a integração real com supabase.auth.signInWithPassword ou signUp
     try {
       if (isLogin) {
-        // Simulando o login com sucesso para teste de interface
-        alert('Login simulado com sucesso!');
-        if (role === 'senior') {
+        // Fazer o Login no Supabase
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) throw signInError;
+
+        // Buscar o perfil do usuário para saber se é idoso ou estudante
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        // Redirecionar para o dashboard correto
+        if (profile.role === 'senior') {
           router.push('/dashboard/senior');
         } else {
           router.push('/dashboard/student');
         }
       } else {
-        // Simulando o cadastro
-        alert(`Conta criada com sucesso para ${fullName}!`);
-        setIsLogin(true);
+        // Fazer o Cadastro no Supabase
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (signUpError) throw signUpError;
+        
+        if (data.user) {
+          // Criar o perfil do usuário na tabela profiles
+          const { error: profileError } = await supabase.from('profiles').insert([
+            {
+              id: data.user.id,
+              full_name: fullName,
+              role: role,
+            }
+          ]);
+
+          if (profileError) throw profileError;
+        }
+
+        alert(`Conta criada com sucesso para ${fullName}! Você já pode fazer login.`);
+        setIsLogin(true); // Muda para a tela de login
       }
     } catch (err: any) {
       setError(err.message || 'Ocorreu um erro ao processar sua solicitação.');
